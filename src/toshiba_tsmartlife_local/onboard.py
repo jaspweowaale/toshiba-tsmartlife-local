@@ -6,15 +6,21 @@ LAN ``token``/``key`` pair that the separate ``midea_ac_lan`` (or, on
 recent Home Assistant releases, the built-in "Midea") integration needs
 for local-only operation afterward.
 
-This module does **not** hardcode, store, or transmit anywhere any of:
-  * the shared TSmartLife application constants (app_id/app_key/iot_key/
-    hmac_key) -- these must be supplied via environment variables or a
-    local config file you create yourself, see ``docs/TOKEN_ONBOARDING.md``;
-  * the user's password (read via a hidden prompt, held in memory only for
-    the duration of one `login()` call, never written to disk or logged);
-  * the resulting device token/key, beyond printing them once (or writing
-    them once, if --output-file is given, with restrictive permissions)
-    for the user to copy into Home Assistant themselves.
+A built-in default set of the 4 shared TSmartLife app-level constants
+("TSmartLife Vietnam" -- see ``vietnam_defaults.py`` and
+``docs/APP_CREDENTIAL_SECURITY.md``) is used automatically if you don't
+supply your own. This module still does **not** hardcode, store, or
+transmit anywhere any of:
+  * the user's own TSmartLife account username/password (read via a
+    hidden prompt, held in memory only for the duration of one `login()`
+    call, never written to disk or logged);
+  * the resulting device-specific LAN token/key, beyond printing them
+    once (or writing them once, if --output-file is given, with
+    restrictive permissions) for the user to copy into Home Assistant
+    themselves;
+  * the device serial number/ID beyond what's needed to let the user
+    pick their own appliance;
+  * any session token or cookie.
 """
 
 from __future__ import annotations
@@ -100,30 +106,45 @@ def _read_app_constants_from_file(path: Path) -> dict[str, str]:
 def _read_app_constants(config_file: str | None) -> dict[str, str]:
     """Read the 4 shared TSmartLife app-level constants.
 
-    Precedence: --config-file argument, then $TSMARTLIFE_CONFIG_FILE, then
-    the 4 individual TSMARTLIFE_* environment variables. These are NOT
-    per-user secrets -- they are the same 4 values for every TSmartLife
-    installation, baked into the app itself. See
-    docs/TOKEN_ONBOARDING.md for exactly why this project cannot ship them
-    pre-filled and what that means for you.
+    Precedence, highest first: --config-file argument,
+    $TSMARTLIFE_CONFIG_FILE, the 4 individual TSMARTLIFE_* environment
+    variables (only if *all 4* are set), then the built-in
+    "TSmartLife Vietnam" default (``vietnam_defaults.VIETNAM_DEFAULT``).
+    Any explicit override always wins over the built-in default -- it is
+    only ever used when nothing else is supplied. These are NOT per-user
+    secrets -- they are the same 4 values for every TSmartLife
+    installation, baked into the app itself; see
+    docs/APP_CREDENTIAL_SECURITY.md for the full classification and why
+    shipping a default is considered safe to do.
     """
     path_str = config_file or os.environ.get(CONFIG_FILE_ENV_VAR)
     if path_str:
         return _read_app_constants_from_file(Path(path_str).expanduser())
 
-    missing = [v for v in REQUIRED_ENV_VARS if not os.environ.get(v)]
-    if missing:
+    present = [v for v in REQUIRED_ENV_VARS if os.environ.get(v)]
+    if present and len(present) < len(REQUIRED_ENV_VARS):
+        # Some but not all 4 are set -- almost certainly a typo/partial
+        # override attempt, not "no override at all". Raise rather than
+        # silently falling back to the built-in default and discarding
+        # the partial input the user clearly intended to use.
+        missing = [v for v in REQUIRED_ENV_VARS if v not in present]
         raise OnboardingError(
-            "Missing required TSmartLife app configuration.\n"
-            "Provide it either as a JSON file (--config-file PATH or "
-            f"${CONFIG_FILE_ENV_VAR}) with keys "
-            f"{sorted(CONFIG_FILE_KEYS)}, or as environment variable(s): "
-            + ", ".join(missing)
-            + ".\nSee docs/TOKEN_ONBOARDING.md for what these are and why "
-            "this tool cannot provide them for you -- this is the one step "
-            "that is currently NOT solved for an ordinary owner.",
+            "Partial TSmartLife app configuration via environment "
+            "variables: missing " + ", ".join(missing) + ". Set all 4 "
+            "(to override), or none (to use the built-in default).",
         )
-    return {v: os.environ[v] for v in REQUIRED_ENV_VARS}
+    if len(present) == len(REQUIRED_ENV_VARS):
+        return {v: os.environ[v] for v in REQUIRED_ENV_VARS}
+
+    from toshiba_tsmartlife_local.vietnam_defaults import VIETNAM_DEFAULT
+
+    print(
+        "Using the built-in 'TSmartLife Vietnam' app configuration default "
+        "(no --config-file/$TSMARTLIFE_CONFIG_FILE/TSMARTLIFE_* env vars "
+        "were supplied). See docs/APP_CREDENTIAL_SECURITY.md.",
+        file=sys.stderr,
+    )
+    return {CONFIG_FILE_KEYS[k]: v for k, v in VIETNAM_DEFAULT.items()}
 
 
 def build_cloud(
@@ -169,6 +190,34 @@ def build_cloud(
         ) from e
 
 
+def select_appliance(appliances: dict[int, dict[str, Any]]) -> int:
+    """Return the appliance id to use, listing/prompting if there's more
+    than one so the user never needs to already know an internal device
+    ID or serial number.
+
+    Exactly one appliance: auto-selected, no prompt. More than one: a
+    numbered list (name + SN only, never the raw internal id) is printed
+    and the user is asked to pick one. Raises OnboardingError on an
+    invalid/empty selection rather than looping forever or guessing.
+    """
+    if len(appliances) == 1:
+        return next(iter(appliances))
+
+    ordered = sorted(appliances.items())
+    print("\nMore than one appliance found on this account:", file=sys.stderr)
+    for i, (_aid, info) in enumerate(ordered, start=1):
+        name = info.get("name") or "(unnamed)"
+        sn = info.get("sn") or "(unknown SN)"
+        print(f"  {i}. {name}  [SN: {sn}]", file=sys.stderr)
+
+    choice = input(f"Select device [1-{len(ordered)}]: ").strip()
+    if not choice.isdigit() or not (1 <= int(choice) <= len(ordered)):
+        raise OnboardingError(
+            f"Invalid selection {choice!r}; expected a number from 1 to {len(ordered)}.",
+        )
+    return ordered[int(choice) - 1][0]
+
+
 async def fetch_lan_credentials(
     cloud: MideaCloud,
     device_sn: str | None,
@@ -207,8 +256,6 @@ async def fetch_lan_credentials(
 
     resolved_id = device_id
     if resolved_id is None:
-        if not device_sn or not device_sn.strip():
-            raise OnboardingError("Provide either --device-id or --device-sn.")
         try:
             appliances = await cloud.list_appliances(home_id=None)
         except Exception as e:
@@ -221,17 +268,21 @@ async def fetch_lan_credentials(
                 "cloud did not return a list. Confirm this account is the "
                 "one actually paired with the fridge in the TSmartLife app.",
             )
-        match = next(
-            (aid for aid, info in appliances.items() if info.get("sn") == device_sn),
-            None,
-        )
-        if match is None:
-            known = ", ".join(str(info.get("sn")) for info in appliances.values())
-            raise OnboardingError(
-                f"No appliance with SN {device_sn!r} found on this account. "
-                f"SNs visible to this account: {known or '(none)'}",
+
+        if device_sn and device_sn.strip():
+            match = next(
+                (aid for aid, info in appliances.items() if info.get("sn") == device_sn),
+                None,
             )
-        resolved_id = match
+            if match is None:
+                known = ", ".join(str(info.get("sn")) for info in appliances.values())
+                raise OnboardingError(
+                    f"No appliance with SN {device_sn!r} found on this account. "
+                    f"SNs visible to this account: {known or '(none)'}",
+                )
+            resolved_id = match
+        else:
+            resolved_id = select_appliance(appliances)
 
     try:
         keys = await cloud.get_cloud_keys(resolved_id)
@@ -263,13 +314,15 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         "--device-sn",
         default=None,
         help="Your appliance's serial number (printed inside the door). "
-        "Alternative to --device-id.",
+        "Optional -- if omitted (along with --device-id), this tool lists "
+        "your account's appliances and lets you pick interactively.",
     )
     parser.add_argument(
         "--device-id",
         type=int,
         default=None,
-        help="Numeric appliance ID, if already known (e.g. from LAN discovery).",
+        help="Numeric appliance ID, if already known (e.g. from LAN discovery). "
+        "Optional, same as --device-sn.",
     )
     parser.add_argument(
         "--config-file",

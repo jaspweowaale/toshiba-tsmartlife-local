@@ -17,10 +17,13 @@ from toshiba_tsmartlife_local.onboard import (
     OnboardingError,
     _read_app_constants,
     _read_app_constants_from_file,
+    _run,
     _write_output_file,
     build_cloud,
     fetch_lan_credentials,
+    select_appliance,
 )
+from toshiba_tsmartlife_local.vietnam_defaults import VIETNAM_DEFAULT
 
 FAKE_ENV = {
     "TSMARTLIFE_APP_ID": "test_only_app_id_not_real",
@@ -38,11 +41,15 @@ FAKE_CONFIG_FILE_CONTENT = {
 
 
 class TestReadAppConstants:
-    def test_raises_when_all_missing(self) -> None:
-        with patch.dict(os.environ, {}, clear=True), pytest.raises(
-            OnboardingError, match="Missing required TSmartLife app configuration",
-        ):
-            _read_app_constants(config_file=None)
+    def test_falls_back_to_builtin_default_when_all_missing(self) -> None:
+        with patch.dict(os.environ, {}, clear=True):
+            result = _read_app_constants(config_file=None)
+        assert result == {
+            "TSMARTLIFE_APP_ID": VIETNAM_DEFAULT["app_id"],
+            "TSMARTLIFE_APP_KEY": VIETNAM_DEFAULT["app_key"],
+            "TSMARTLIFE_IOT_KEY": VIETNAM_DEFAULT["iot_key"],
+            "TSMARTLIFE_HMAC_KEY": VIETNAM_DEFAULT["hmac_key"],
+        }
 
     def test_raises_when_partially_missing(self) -> None:
         partial = dict(FAKE_ENV)
@@ -184,18 +191,40 @@ class TestFetchLanCredentials:
             await fetch_lan_credentials(cloud, device_sn=None, device_id=42)
 
     @pytest.mark.asyncio
-    async def test_blank_sn_treated_as_missing(self) -> None:
+    async def test_blank_sn_falls_through_to_discovery_single_appliance(self) -> None:
         cloud = Mock()
         cloud.login = AsyncMock(return_value=True)
-        with pytest.raises(OnboardingError, match="device-id or --device-sn"):
-            await fetch_lan_credentials(cloud, device_sn="   ", device_id=None)
+        cloud.list_appliances = AsyncMock(return_value={42: {"sn": "X", "name": "Fridge"}})
+        cloud.get_cloud_keys = AsyncMock(return_value={1: {"token": "tok", "key": "key"}})
+        result = await fetch_lan_credentials(cloud, device_sn="   ", device_id=None)
+        cloud.get_cloud_keys.assert_awaited_once_with(42)
+        assert result == {1: {"token": "tok", "key": "key"}}
 
     @pytest.mark.asyncio
-    async def test_no_sn_or_id_raises(self) -> None:
+    async def test_no_sn_or_id_with_single_appliance_auto_selects(self) -> None:
         cloud = Mock()
         cloud.login = AsyncMock(return_value=True)
-        with pytest.raises(OnboardingError, match="device-id or --device-sn"):
-            await fetch_lan_credentials(cloud, device_sn=None, device_id=None)
+        cloud.list_appliances = AsyncMock(return_value={42: {"sn": "X", "name": "Fridge"}})
+        cloud.get_cloud_keys = AsyncMock(return_value={1: {"token": "tok", "key": "key"}})
+        result = await fetch_lan_credentials(cloud, device_sn=None, device_id=None)
+        cloud.get_cloud_keys.assert_awaited_once_with(42)
+        assert result == {1: {"token": "tok", "key": "key"}}
+
+    @pytest.mark.asyncio
+    async def test_no_sn_or_id_with_multiple_appliances_prompts_and_selects(self) -> None:
+        cloud = Mock()
+        cloud.login = AsyncMock(return_value=True)
+        cloud.list_appliances = AsyncMock(
+            return_value={
+                111: {"sn": "SN_A", "name": "Kitchen Fridge"},
+                222: {"sn": "SN_B", "name": "Garage Fridge"},
+            },
+        )
+        cloud.get_cloud_keys = AsyncMock(return_value={1: {"token": "tok", "key": "key"}})
+        with patch("builtins.input", return_value="2"):
+            result = await fetch_lan_credentials(cloud, device_sn=None, device_id=None)
+        cloud.get_cloud_keys.assert_awaited_once_with(222)
+        assert result == {1: {"token": "tok", "key": "key"}}
 
     @pytest.mark.asyncio
     async def test_resolves_device_id_directly_without_listing(self) -> None:
@@ -250,3 +279,109 @@ class TestFetchLanCredentials:
         cloud.get_cloud_keys = AsyncMock(return_value={})
         with pytest.raises(OnboardingError, match="no LAN token/key"):
             await fetch_lan_credentials(cloud, device_sn=None, device_id=42)
+
+
+class TestVietnamDefaultPrecedence:
+    """Explicit confirmation that any override (config file or all-4 env
+    vars) always wins over the built-in default, and that the built-in
+    default is only ever used when nothing else is supplied."""
+
+    def test_env_override_wins_over_builtin_default(self) -> None:
+        with patch.dict(os.environ, FAKE_ENV, clear=True):
+            result = _read_app_constants(config_file=None)
+        builtin_mapped = {
+            "TSMARTLIFE_APP_ID": VIETNAM_DEFAULT["app_id"],
+            "TSMARTLIFE_APP_KEY": VIETNAM_DEFAULT["app_key"],
+            "TSMARTLIFE_IOT_KEY": VIETNAM_DEFAULT["iot_key"],
+            "TSMARTLIFE_HMAC_KEY": VIETNAM_DEFAULT["hmac_key"],
+        }
+        assert result == FAKE_ENV
+        assert result != builtin_mapped
+
+    def test_config_file_override_wins_over_builtin_default(self, tmp_path) -> None:
+        config_path = tmp_path / "config.json"
+        config_path.write_text(json.dumps(FAKE_CONFIG_FILE_CONTENT))
+        with patch.dict(os.environ, {}, clear=True):
+            result = _read_app_constants(config_file=str(config_path))
+        assert result["TSMARTLIFE_APP_ID"] == "file_app_id_not_real"
+        assert result["TSMARTLIFE_APP_ID"] != VIETNAM_DEFAULT["app_id"]
+
+    def test_builtin_default_values_are_nonempty_strings(self) -> None:
+        # Structural check only -- this project never asserts on the
+        # actual secret values in a test, only that the 4 expected keys
+        # exist and are non-empty strings (same spirit as Step 1's own
+        # verification).
+        assert set(VIETNAM_DEFAULT) == {"app_id", "app_key", "iot_key", "hmac_key"}
+        for v in VIETNAM_DEFAULT.values():
+            assert isinstance(v, str)
+            assert len(v) > 0
+
+
+class TestSelectAppliance:
+    def test_single_appliance_auto_selected_no_prompt(self) -> None:
+        with patch("builtins.input") as mock_input:
+            result = select_appliance({42: {"sn": "X", "name": "Fridge"}})
+        result_id = result
+        assert result_id == 42
+        mock_input.assert_not_called()
+
+    def test_multiple_appliances_prompts_and_returns_selection(self) -> None:
+        appliances = {
+            111: {"sn": "SN_A", "name": "Kitchen Fridge"},
+            222: {"sn": "SN_B", "name": "Garage Fridge"},
+        }
+        with patch("builtins.input", return_value="1"):
+            result = select_appliance(appliances)
+        assert result == 111
+
+    def test_multiple_appliances_invalid_selection_raises(self) -> None:
+        appliances = {111: {"sn": "SN_A"}, 222: {"sn": "SN_B"}}
+        with patch("builtins.input", return_value="9"), pytest.raises(
+            OnboardingError, match="Invalid selection",
+        ):
+            select_appliance(appliances)
+
+    def test_multiple_appliances_non_numeric_selection_raises(self) -> None:
+        appliances = {111: {"sn": "SN_A"}, 222: {"sn": "SN_B"}}
+        with patch("builtins.input", return_value="abc"), pytest.raises(
+            OnboardingError, match="Invalid selection",
+        ):
+            select_appliance(appliances)
+
+    def test_multiple_appliances_list_shown_has_name_and_sn_not_raw_id(self, capsys) -> None:
+        appliances = {111: {"sn": "SN_A", "name": "Kitchen Fridge"}}
+        appliances[222] = {"sn": "SN_B", "name": "Garage Fridge"}
+        with patch("builtins.input", return_value="1"):
+            select_appliance(appliances)
+        err = capsys.readouterr().err
+        assert "Kitchen Fridge" in err
+        assert "SN_A" in err
+
+
+class TestSecureOutput:
+    """Confirm the password never appears anywhere in captured output
+    during a full (mocked) onboarding run -- the core promise of
+    docs/SECURITY_AND_PRIVACY.md."""
+
+    @pytest.mark.asyncio
+    async def test_password_never_echoed_in_full_run(self, monkeypatch, capsys) -> None:
+        secret_password = "sUpEr_sEcReT_not_a_real_password_12345"
+        monkeypatch.setattr("builtins.input", lambda _prompt="": "someone@example.com")
+        monkeypatch.setattr("getpass.getpass", lambda _prompt="": secret_password)
+        monkeypatch.setattr(
+            "toshiba_tsmartlife_local.onboard.build_cloud",
+            lambda *_a, **_kw: Mock(_session=Mock(close=AsyncMock())),
+        )
+
+        async def _fake_fetch(*_a, **_kw):
+            return {1: {"token": "tok_value", "key": "key_value"}}
+
+        monkeypatch.setattr(
+            "toshiba_tsmartlife_local.onboard.fetch_lan_credentials", _fake_fetch,
+        )
+        with patch.dict(os.environ, FAKE_ENV, clear=True):
+            exit_code = await _run([])
+        assert exit_code == 0
+        captured = capsys.readouterr()
+        assert secret_password not in captured.out
+        assert secret_password not in captured.err

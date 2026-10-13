@@ -33,12 +33,10 @@ that's genuinely useful information this guide doesn't have yet.
   TSmartLife app's Device Information screen.
 - A computer to run this project's CLI on (does not need to be the same
   machine as Home Assistant) — Python 3.12+.
-- **[BLOCKED, read this before continuing]**: the 4 shared TSmartLife
-  "app-level" constants described in step 3. See
+- The 4 shared TSmartLife "app-level" constants (see step 3) are now
+  **built in by default** — nothing to obtain yourself for this part. See
   [`TOKEN_ONBOARDING.md`](TOKEN_ONBOARDING.md) for exactly what these are
-  and why this project cannot hand them to you — this is the one real gap
-  in this whole guide, stated here up front rather than discovered three
-  steps in.
+  and why shipping a default for them is considered safe.
 
 ## 2. Install the HA-side integration — [TESTED]
 
@@ -49,38 +47,48 @@ exist since HA 2026.8 but not independently confirmed here; if it's not
 there, use HACS). Do not configure a device yet — you need the LAN
 token/key from step 4 first.
 
-## 3. Get the 4 TSmartLife app constants — [BLOCKED for most readers]
+## 3. The 4 TSmartLife app constants — [built in, nothing to do]
 
-If you already have these (shared by this project's maintainer, or
-recovered independently): continue to step 4. **If you don't have them,
-there is currently no documented way to get them yourself** — this is
-not this guide glossing over a hard step, it is the actual state of
-things. See `TOKEN_ONBOARDING.md`'s "The real blocker" section for the
-full explanation and what would need to change.
+This project now ships a built-in default for these (the "TSmartLife
+Vietnam" preset — see
+[`APP_CREDENTIAL_SECURITY.md`](APP_CREDENTIAL_SECURITY.md) for exactly
+what they are and the maintainer's reasoning for shipping them). You do
+not need to find or supply these yourself for this app variant. If you're
+on a *different* TSmartLife app variant/market and know your own 4
+values, you can still override the built-in default — see
+`TOKEN_ONBOARDING.md`.
 
-## 4. Run the onboarding CLI — [TESTED against mocked responses; NOT run against the live cloud this session, per safety rules]
+## 4. Run the onboarding CLI — [TESTED offline against 36 mocked-response cases; NOT run against the live cloud this session, per safety rules]
 
 ```bash
 pip install -e "git+https://github.com/wuwentao/midea-lan.git#egg=midea-lan"
 pip install -e .   # from this project's own directory
-export TSMARTLIFE_APP_ID=... TSMARTLIFE_APP_KEY=... TSMARTLIFE_IOT_KEY=... TSMARTLIFE_HMAC_KEY=...
 
-toshiba-tsmartlife-onboard --device-sn YOUR_SERIAL_NUMBER
+toshiba-tsmartlife-onboard
 ```
 
-Enter your email and password when prompted. On success, it prints one or
-more `token`/`key` pairs — copy them.
+Enter your email and password when prompted. If your account has more
+than one appliance, you'll see a numbered list to choose from (with
+exactly one appliance, it's used automatically). On success, it prints
+one or more `token`/`key` pairs — copy them.
 
-**What's actually verified here**: the login/appliance-lookup/key-retrieval
-*code path* is exercised by 26 passing offline tests against mocked cloud
-responses, and the same underlying library calls were confirmed working
-against this exact real refrigerator in this project's earlier
-development (see the project's `RESUME.md` history). **What's not
-verified**: this specific CLI wrapper has not itself been run against the
-live TSmartLife cloud end-to-end — doing so this session would have meant
-a fresh cloud login, which was explicitly avoided (a fresh login is known
-to momentarily displace the official app's own session on your phone —
-harmless, but worth knowing in advance, not discovering by surprise).
+> **⚠ Before you run this**: a fresh cloud login is known to momentarily
+> displace the official TSmartLife app's own session on your phone — you
+> may see it show logged-out, or need to re-open it afterward. This is
+> harmless and temporary, but know about it in advance rather than being
+> surprised by it mid-setup.
+
+**What's actually verified here**: the login/appliance-discovery/
+selection/key-retrieval *code path* is exercised by 36 passing offline
+tests against mocked cloud responses (including the built-in-default
+precedence logic and the multi-appliance selection prompt), and the same
+underlying library calls were confirmed working against this exact real
+refrigerator in this project's earlier development (see the project's
+`RESUME.md` history). **What's not verified**: this specific CLI wrapper
+has not itself been run against the live TSmartLife cloud end-to-end in
+this project's testing — doing so would mean a fresh cloud login, which
+has been deliberately avoided in every automated session so far for the
+reason boxed above, not because the code path is untested.
 
 ## 5. Configure Home Assistant — [TESTED, from earlier development]
 

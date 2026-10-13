@@ -1,7 +1,61 @@
 # Publication readiness record
 
 Recorded before this repository was first made public, as the explicit
-pre-publication checklist required for this project.
+pre-publication checklist required for this project. See the dated
+follow-up round below for the built-in-default-credentials commit.
+
+## Follow-up round — built-in default credentials + device discovery
+
+This round adds the maintainer-approved built-in "TSmartLife Vietnam"
+default (`src/toshiba_tsmartlife_local/vietnam_defaults.py`) and
+interactive multi-appliance selection. This is the **first** commit in
+this repository's history to contain a real value of any kind — recorded
+here explicitly rather than silently, since it changes the "no real
+credential in this repo" claim made in the original scan below for all
+prior commits (which remains true for those commits).
+
+**Secrets scan — PASSED, two independent methods, scoped to this round's
+actual diff**:
+1. **Exact-value check** against both restricted source files (the
+   app-level config and, defensively, the unrelated LAN-credentials
+   file): the 4 approved values (`app_id`, `app_key`, `iot_key`,
+   `hmac_key`) are present **exactly once each, only in
+   `vietnam_defaults.py`, nowhere else** (not in any other file, not in
+   any doc). The LAN token/key, the numeric device ID, and the full
+   unique appliance serial number are **absent everywhere** in the diff —
+   checked value-for-value, not just by pattern.
+2. **Generic heuristic check** (same method as the original scan below:
+   24+-character hex/base64-looking strings) across the same diff: 68
+   matches, all manually reviewed — all are Python identifiers, test
+   names, file paths, or the one deliberate fake test password already
+   reviewed in `test_onboard.py`, **except one**, which re-identified the
+   same already-approved `app_key` in its correct, expected location
+   (confirmed by direct line lookup, not assumed).
+3. A false positive from an earlier, broader scan pass (checking full
+   file contents instead of only the actual diff) flagged the
+   already-published, pre-existing "Internal model code: `310A079W`"
+   README line — confirmed via `git diff README.md` to be **unchanged,
+   pre-existing content from the already-published commit `a1e3c84`**,
+   not part of this round's diff. Documented here so the false-positive
+   investigation itself is on the record, not silently discarded.
+
+**Tests — PASSED**: 36/36 (up from 26 — 10 new, covering built-in-default
+precedence, multi-appliance selection, and secure-output/no-password-
+echoed verification).
+
+**Lint — PASSED**: `ruff check .`, all checks passed (one `noqa`-directive
+nit found and fixed before this record was written).
+
+**Docs updated to stay consistent with shipping real values**:
+`APP_CREDENTIAL_SECURITY.md`'s "Responsible recommendation" section
+(previously said no real value was in the repo and recommended a private
+channel over a public commit) was rewritten to record the maintainer's
+actual decision and that the private-channel alternative was consciously
+not the path taken. `TOKEN_ONBOARDING.md` and `USER_GUIDE.md`'s
+"blocked" framing for layer 2 was replaced with the resolved, built-in-
+default state.
+
+## Original scan — before first publication
 
 ## Secrets scan — PASSED
 

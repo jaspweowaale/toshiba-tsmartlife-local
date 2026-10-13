@@ -8,19 +8,24 @@
 > ([`midea_ac_lan`](https://github.com/wuwentao/midea_ac_lan)) for all
 > actual device communication — this project only helps obtain the one
 > piece of information that integration needs for a TSmartLife-paired
-> appliance. **Independent onboarding is NOT yet fully solved**: the
-> shared TSmartLife app-level cloud configuration this project's CLI
-> needs has no publicly available, reproducible extraction method today
-> — see [`docs/TOKEN_ONBOARDING.md`](docs/TOKEN_ONBOARDING.md) for the
-> exact, honest state of that blocker before assuming this works for you
-> out of the box.
+> appliance. **Independent onboarding is now solved for this one app
+> variant**: this project ships a built-in default for the shared
+> TSmartLife app-level configuration (see
+> [`docs/APP_CREDENTIAL_SECURITY.md`](docs/APP_CREDENTIAL_SECURITY.md) for
+> exactly what that is, why it's safe to ship, and what it is *not* —
+> it is not your account, your appliance, or your password). You can
+> still override it with your own values for a different app
+> variant/market via `--config-file`/env vars — see
+> [`docs/TOKEN_ONBOARDING.md`](docs/TOKEN_ONBOARDING.md).
 >
 > **This project does NOT**: claim support for any Toshiba model other
 > than the one named below, claim a fully cloud-free *initial* pairing
-> (a one-time cloud login by you, with your own account, is required to
-> obtain your appliance's LAN token/key), provide automatic/bundled
-> token extraction, or implement a complete standalone Home Assistant
-> integration (it deliberately reuses the existing one).
+> (a one-time cloud login by **you**, with **your own account**, is
+> still required to obtain your specific appliance's LAN token/key — see
+> the session-displacement warning under [Usage](#usage) before you run
+> it), provide automatic/bundled *appliance-specific* token extraction,
+> or implement a complete standalone Home Assistant integration (it
+> deliberately reuses the existing one).
 
 A small, focused **onboarding helper** that, once you have the
 information in `TOKEN_ONBOARDING.md`, gets a Toshiba TSmartLife
@@ -113,16 +118,18 @@ later ships on PyPI, a plain `pip install midea-lan` will also work.)
 
 **For a plain, step-by-step walkthrough aimed at an ordinary owner, see
 [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md).** This section is the terse
-reference version. See
-[`docs/TOKEN_ONBOARDING.md`](docs/TOKEN_ONBOARDING.md) for the one real
-blocker this project has **not** solved — read it before assuming this
-"just works" for you.
+reference version.
 
-The 4 shared app-level constants (see `TOKEN_ONBOARDING.md`) can be
-supplied two ways — pick whichever you prefer:
+The 4 shared app-level constants now have a **built-in default**
+("TSmartLife Vietnam" — see
+[`docs/APP_CREDENTIAL_SECURITY.md`](docs/APP_CREDENTIAL_SECURITY.md)), so
+**you don't need to supply anything for this part** unless you want to
+override it (e.g. a different market/app variant). To override, pick
+whichever you prefer — any of these always takes priority over the
+built-in default:
 
 ```bash
-# Option A: environment variables
+# Option A: environment variables (all 4 required together to override)
 export TSMARTLIFE_APP_ID="..."
 export TSMARTLIFE_APP_KEY="..."
 export TSMARTLIFE_IOT_KEY="..."
@@ -137,24 +144,35 @@ export TSMARTLIFE_CONFIG_FILE=~/.config/tsmartlife/app_config.json
 # -- or pass --config-file explicitly each time instead of exporting this
 ```
 
-Then:
+Then just:
 
 ```bash
-toshiba-tsmartlife-onboard \
-  --device-sn "the-serial-number-printed-inside-your-fridge-door"
-  # --username is optional -- you'll be prompted if you omit it
+toshiba-tsmartlife-onboard
+# --username is optional -- you'll be prompted if you omit it
+# --device-sn / --device-id are also optional -- if you omit them and
+# your account has more than one appliance, you'll see a numbered list
+# to pick from interactively; with exactly one appliance, it's used
+# automatically, no prompt needed
 ```
+
+> **⚠ Before you run this**: logging in here uses **your own real
+> TSmartLife account** (never stored). A fresh cloud login is known to
+> momentarily displace the official TSmartLife app's own session on your
+> phone — you may see it show logged-out or need to re-open it
+> afterward. This is harmless and temporary, but you should know about it
+> in advance rather than be surprised by it.
 
 This prompts for your email (if not given) and password (always hidden,
 never a plain CLI argument or logged), logs in to the TSmartLife cloud
-**once**, retrieves your specific appliance's LAN `token`/`key`, and
-prints them. Add `--output-file path/to/result.json` to also save them to
-a file created with owner-only permissions (POSIX systems). It does not
-store your password anywhere, and every expected failure (missing config,
-wrong password, network error, appliance not found) produces a plain-
-language message — not a raw Python traceback. Paste the resulting
-`token`/`key` into your Home Assistant integration's "Configure manually"
-step (see `docs/USER_GUIDE.md` for the full HA-side walkthrough).
+**once**, lets you pick your appliance if needed, retrieves its LAN
+`token`/`key`, and prints them. Add `--output-file path/to/result.json` to
+also save them to a file created with owner-only permissions (POSIX
+systems). It does not store your password anywhere, and every expected
+failure (missing config, wrong password, network error, appliance not
+found) produces a plain-language message — not a raw Python traceback.
+Paste the resulting `token`/`key` into your Home Assistant integration's
+"Configure manually" step (see `docs/USER_GUIDE.md` for the full HA-side
+walkthrough).
 
 ### Install notes by platform
 

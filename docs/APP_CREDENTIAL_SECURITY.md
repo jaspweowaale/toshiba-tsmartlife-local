@@ -3,10 +3,18 @@
 This document classifies `app_id`, `app_key`, `iot_key`, and `hmac_key`
 (referred to throughout this project as "layer 2" — see
 `TOKEN_ONBOARDING.md`). **No actual value of any of these 4 constants is
-printed anywhere in this document, this repository, or its git history.**
-Everything below is based on their *role in the protocol* and on
-*publicly verifiable facts about upstream's own repository* — not on
-anything that would require disclosing our own recovered copies.
+printed anywhere in this document** — this analysis is based on their
+*role in the protocol* and on *publicly verifiable facts about upstream's
+own repository*, not on disclosing the values themselves.
+
+**Update — maintainer decision recorded here**: after reviewing this
+exact analysis, the maintainer explicitly approved publishing this
+project's own already-recovered copy of these 4 values, and they are now
+shipped as the built-in default in
+`src/toshiba_tsmartlife_local/vietnam_defaults.py` (see "Responsible
+recommendation" §4 below for what changed and why point 3's original
+lower-risk suggestion — a private channel instead of a public commit —
+was consciously not the path taken).
 
 Findings are explicitly separated into three confidence tiers:
 **CONFIRMED** (directly observed, verifiable by anyone against public
@@ -138,28 +146,30 @@ of these 4 values from someone who already has them.
 
 ## Responsible recommendation for ordinary Vietnamese owners
 
-1. **This document does not change what the repository currently
-   contains.** No real value of any of the 4 constants is in this
-   repository, in any file, or in git history — confirmed by a dedicated
-   scan before every commit this project has made (see
-   `PUBLICATION_READINESS.md` for this round's specific scan).
-2. **Whether to actually publish, or privately distribute, this
-   project's own recovered copy remains the maintainer's decision alone**
-   — this analysis does not make that call for them. What it adds, beyond
-   `TOKEN_ONBOARDING.md`'s earlier framing, is: strong precedent that the
-   *practical* risk is lower than "secret leak" framing would suggest
-   (§5, §7), while the *legal/ToS* angle remains a genuine, unresolved
-   unknown (§8) that a purely technical analysis cannot close.
-3. **If the maintainer does decide to distribute these values**, the
-   lowest-risk approach given everything above would be: not committing
-   them to the public git history of this repository (where they become
-   permanently, trivially scrapeable and attributable to this specific
-   project), and instead sharing them through a narrower, revocable
-   channel (direct message, a separate non-indexed document, etc.) to
-   people who ask — preserving most of the practical benefit while
-   keeping the legal/ToS exposure (§8) and the "who published this"
-   attribution lower than a public commit would.
-4. **For an ordinary owner reading this today**: the honest status is
-   still "blocked unless someone gives you these 4 values directly" —
-   this document is an analysis of a policy question, not a new
-   onboarding path.
+1. **Historical note, no longer current**: earlier revisions of this
+   document (and of this repository) contained no real value of any of
+   the 4 constants, by design, while the publish decision was still
+   pending. That has since changed — see point 4.
+2. **The decision has been made.** The maintainer reviewed this exact
+   analysis and explicitly approved publishing this project's own
+   recovered copy of the 4 values. What this document added to that
+   decision, beyond `TOKEN_ONBOARDING.md`'s earlier framing: strong
+   precedent that the *practical* risk is lower than "secret leak" framing
+   would suggest (§5, §7), while the *legal/ToS* angle remains a genuine,
+   unresolved unknown (§8) that this technical analysis could not close on
+   its own — the maintainer accepted that specific unresolved risk
+   knowingly, not by oversight.
+3. **The lower-risk alternative this document originally suggested — a
+   private, revocable channel instead of a public commit — was
+   considered and consciously not the path taken.** The maintainer judged
+   the plug-and-play benefit (the actual goal of this project) to
+   outweigh that extra margin of caution for these specific 4 values.
+   If Midea/Toshiba rotates them in response, or asserts a ToS objection,
+   this document and the shipped default will need revisiting — not a
+   silent surprise, see `TOKEN_ONBOARDING.md`'s "Resolved" section.
+4. **For an ordinary owner reading this today, on this app variant**: the
+   status is no longer "blocked" — the 4 values ship as the built-in
+   default in `vietnam_defaults.py`. The legal/ToS unknown in §8 still
+   applies to *using* them, same as it always did; this document does not
+   resolve that, only records that the maintainer proceeded with full
+   awareness of it.
