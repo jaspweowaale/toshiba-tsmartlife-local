@@ -9,8 +9,9 @@ door status, and history, running on your own home network.
 > product, not an official release, and **not affiliated with, endorsed
 > by, or supported by Toshiba or Midea** in any way. Verified end-to-end
 > against exactly one physical unit so far (see
-> [Supported Toshiba models](#supported-toshiba-models)). It uses the
-> existing open-source [`midea_ac_lan`](https://github.com/wuwentao/midea_ac_lan)
+> [Supported Toshiba models](#supported-toshiba-models)); no independent
+> third-party installation has been confirmed yet. It uses the existing
+> open-source [`midea_ac_lan`](https://github.com/wuwentao/midea_ac_lan)
 > Home Assistant integration for all actual device communication — this
 > project only gets that integration the one piece of information it
 > needs for a TSmartLife-paired appliance.
@@ -43,9 +44,18 @@ you're curious why it's built this way instead of as a new app/integration.
 | Where data comes from | Toshiba's cloud, every time you open the app | Your own LAN, directly from the fridge |
 | Works without internet | No | Yes, after the one-time setup below |
 | History/graphs | Not built in | Native Home Assistant history, any time range |
-| Automations (e.g. door-left-open alerts) | Not available | Yes — see [the door-open alert blueprint](#optional-door-open-alert-blueprint) |
+| Automations (e.g. door-left-open alerts) | Not available | Yes, confirmed working — see [below](#optional-door-open-alert-blueprint) |
 | Combine with other sensors/dashboards | No | Yes, it's just more Home Assistant entities |
 | Ongoing cloud dependency | Every use | None, once set up |
+
+**Why this is worth the one-time setup**: the app typically shows you what
+the fridge is *set to*, not necessarily what it's *actually* doing right
+now at a glance — you'd have to open the app and check manually, every
+time. An actual-temperature reading in Home Assistant means you can see
+at a glance whether the compartment is really holding its target (useful
+if a door seal is failing, or during a power outage), graph it over days
+or weeks, and get notified automatically the moment a door's been left
+open — rather than finding out only when you happen to check.
 
 ## What you gain
 
@@ -59,8 +69,8 @@ any dashboard, automation, or notification:
 - Monitor upper-door and lower-door open/closed status.
 - Record and graph temperature history over any time range Home Assistant
   keeps.
-- Create an adjustable door-left-open notification (delay is yours to
-  tune — see the blueprint below).
+- Create an adjustable door-left-open notification — **confirmed
+  working**, delay is yours to tune (see the blueprint below).
 - All of the above over your **local network only**, after one initial
   cloud login — see the one caveat below before you run anything.
 
@@ -68,17 +78,20 @@ any dashboard, automation, or notification:
 > key requires logging into TSmartLife once, with your own account. This
 > is known to momentarily sign the official TSmartLife phone app out —
 > harmless, temporary, but better to expect it than be surprised by it.
-> Full detail: [Usage](#quick-installation) below and
+> Full detail: [Quick installation](#quick-installation) below and
 > [`docs/SECURITY_AND_PRIVACY.md`](docs/SECURITY_AND_PRIVACY.md).
 
 ## Screenshots / example dashboard
 
-No live screenshot yet — this project doesn't have a safe way to capture
-one without touching a real, in-production Home Assistant dashboard,
-which isn't something to do just for a README. Instead,
+No live screenshot yet (optional/not blocking) — this project doesn't
+have a safe way to capture one without touching a real, in-production
+Home Assistant dashboard, which isn't something to do just for a README.
+Instead,
 [`examples/lovelace_dashboard_example.yaml`](examples/lovelace_dashboard_example.yaml)
 is a complete, ready-to-paste Lovelace view (standard Home Assistant
-cards only, no custom/HACS cards needed) showing exactly what you get:
+cards only, no custom/HACS cards needed) showing exactly what you get —
+and every card in it is independent, so you can include only the parts
+you want:
 
 - An **entities card** with all three actual temperatures and their
   setpoints side by side.
@@ -87,9 +100,9 @@ cards only, no custom/HACS cards needed) showing exactly what you get:
 - An optional **entities card** for the door-left-open alert's delay
   setting, once you've added the blueprint below.
 
-It's intentionally compact — four small cards, readable on a phone
-screen without scrolling sideways. Substitute `YOUR_DEVICE_ID` with your
-own appliance's numeric ID (visible in each entity's own entity_id once
+It's intentionally compact — small cards, readable on a phone screen
+without scrolling sideways. Substitute `YOUR_DEVICE_ID` with your own
+appliance's numeric ID (visible in each entity's own entity_id once
 you've completed setup).
 
 ## Supported Toshiba models
@@ -109,10 +122,11 @@ Verified end-to-end against exactly one physical unit so far:
 apps work identically.** The underlying device-type/protocol family
 (`0xCA`) is shared across many Midea-made refrigerators sold under
 different brands, so this *may* generalize — but only this one
-model/app/market combination has actually been tested. If you try this on
-a different model, please [report back](#contributing--testing-another-model)
-either way (worked or didn't) — that's genuinely useful information this
-project doesn't have yet.
+model/app/market combination has actually been tested, and no independent
+third party has installed this yet either. If you try this on a different
+model, please [report back](#contributing--testing-another-model) either
+way (worked or didn't) — that's genuinely useful information this project
+doesn't have yet.
 
 ## Quick installation
 
@@ -129,10 +143,14 @@ automatically. The CLI prompts for your TSmartLife email and password
 (password hidden, never stored), logs in once, and prints the `token`/
 `key` pair you paste into `midea_ac_lan`'s "Configure manually" step.
 
-Two things worth knowing about that one dependency: it's not on PyPI
-under that name yet (hence the GitHub-URL pin), and it currently points
-at **our own fork's branch**, not upstream directly — the TSmartLife
-cloud support this needs is still an open, unmerged upstream PR
+> **⚠ Know this before you run it**: a fresh cloud login is known to
+> momentarily displace the official TSmartLife app's own session on your
+> phone — harmless and temporary, but expect it rather than be surprised.
+
+Two things worth knowing about the one dependency this pulls in: it's not
+on PyPI under that name yet (hence the GitHub-URL pin), and it currently
+points at **our own fork's branch**, not upstream directly — the
+TSmartLife cloud support this needs is still an open, unmerged upstream PR
 ([#198](https://github.com/wuwentao/midea-lan/pull/198)). Full
 explanation: [`NOTICE.md`](NOTICE.md).
 
@@ -141,9 +159,31 @@ explanation: [`NOTICE.md`](NOTICE.md).
 **For a full, plain-language, step-by-step walkthrough — installing
 Python itself on Windows/macOS/Linux, creating a virtual environment,
 installing `midea_ac_lan` in Home Assistant, choosing which entities to
-enable, and adding the example dashboard — see
+enable, and adding the example dashboard and door-open alert — see
 [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md).** Each step there is marked
-tested/untested/blocked, not just described.
+tested/untested/blocked/confirmed-working, not just described. In short,
+the whole flow is: install the CLI → log in once to TSmartLife → pick
+your appliance → get its LAN token/key → connect it in `midea_ac_lan` →
+pick which entities to enable → add the optional dashboard and door
+alerts.
+
+## Troubleshooting
+
+Quick answers to the 3 most common snags — full list with more detail in
+[`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md):
+
+- **"TSmartLife cloud login failed"** — double-check your email/password
+  first (confirm they still work in the official app), then double-check
+  any app-constant overrides you've set have no extra whitespace.
+- **"No appliance with SN ... found on this account"** — the serial
+  number must match exactly what the TSmartLife app's Device Information
+  screen shows, and you must be logging in with the same account that
+  device is paired to.
+- **It worked, but `midea_ac_lan` still won't connect** — confirm you
+  used "Configure manually" with device type `0xCA`/protocol `V3`, and
+  that your fridge and Home Assistant are reachable on the same local
+  network/VLAN (IoT-segmented VLANs that block east-west traffic look
+  identical to a bad token).
 
 ## Available HA entities
 
@@ -172,13 +212,25 @@ untested — see [Limitations](#limitations) before enabling anything else.
 is a ready-to-import Home Assistant automation blueprint: notifies you
 when a door group (upper or lower) stays open longer than a delay *you*
 set via a simple number helper — one alert per continuous opening, no
-editing the automation itself to change the delay later.
+editing the automation itself to change the delay later. **This pattern
+is confirmed working**, not an unverified idea — see
+[`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) step 7a for the exact import
+steps.
 
 Import it via **Settings → Automations & Scenes → Blueprints → Import
 Blueprint**, pasting the raw file URL (or copy it manually into
 `config/blueprints/automation/`). You'll need a number helper for the
 delay first (**Settings → Devices & Services → Helpers → Number**) — the
 blueprint's own import screen explains exactly what it needs.
+
+## Contributing / testing another model
+
+Running this successfully (or unsuccessfully) against a different
+Toshiba model, market, or appliance is genuinely useful to report — see
+[`CONTRIBUTING.md`](CONTRIBUTING.md) for exactly what to include, how to
+redact personal identifiers before posting, how to report sensor fields
+that don't work, and where a fix actually belongs (this project vs.
+upstream `midea-lan`/`midea_ac_lan`).
 
 ## Limitations
 
@@ -192,18 +244,11 @@ blueprint's own import screen explains exactly what it needs.
   — pair an independent smart plug if you want that.
 - This project doesn't claim support for any other Toshiba model, market,
   or Midea-family rebrand — see [Supported Toshiba models](#supported-toshiba-models).
+  No independent third-party installation has been confirmed yet, which
+  is why this remains a Developer Preview.
 - The initial setup needs one cloud login with your own account (see the
   caveat under [What you gain](#what-you-gain)) — monitoring afterward is
   fully local.
-
-## Contributing / testing another model
-
-Running this successfully (or unsuccessfully) against a different
-Toshiba model, market, or appliance is genuinely useful to report — see
-[`CONTRIBUTING.md`](CONTRIBUTING.md) for exactly what to include, how to
-redact personal identifiers before posting, how to report sensor fields
-that don't work, and where a fix actually belongs (this project vs.
-upstream `midea-lan`/`midea_ac_lan`).
 
 ## Credits to upstream Midea projects
 

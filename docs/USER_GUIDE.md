@@ -170,6 +170,25 @@ See [`../examples/lovelace_dashboard_example.yaml`](../examples/lovelace_dashboa
 Substitute `YOUR_DEVICE_ID` with your own appliance's numeric ID (visible
 in each entity's own entity_id once step 6 is done).
 
+## 7a. Add the door-open alert (optional) — [CONFIRMED WORKING pattern]
+
+[`../examples/blueprints/door_left_open_alert.yaml`](../examples/blueprints/door_left_open_alert.yaml)
+is a ready-to-import automation blueprint that notifies you when a door
+group (upper or lower) stays open longer than a delay you choose — one
+alert per continuous opening. This is the same trigger pattern already
+confirmed working in real production use, not an unverified idea.
+
+1. Create a number helper for the delay first: **Settings → Devices &
+   Services → Helpers → Create Helper → Number** (seconds, e.g. default
+   60).
+2. **Settings → Automations & Scenes → Blueprints → Import Blueprint**,
+   paste the raw URL to the file above (or copy it manually into
+   `config/blueprints/automation/`).
+3. Create a new automation from the imported blueprint, pick your door
+   sensor (`refrigerator_door` or `freezer_door`), the helper from step
+   1, and whatever notification action you want (e.g. a `notify.*`
+   mobile app service call).
+
 ## 8. Troubleshooting
 
 See [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md).

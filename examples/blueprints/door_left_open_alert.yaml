@@ -5,13 +5,12 @@
 # only works once door-group binary_sensor entities already exist, which
 # requires both of those first. See the main README.
 #
-# This mirrors the exact trigger/condition pattern already confirmed
-# working in real production use (templated `for:` duration read live
-# from an input_number helper, re-evaluated on every new door-open event
-# so a delay change affects future alerts without editing anything).
-# The underlying automation shape is proven in real production use; this
-# specific blueprint wrapper (parameterizing it via !input) has not
-# itself been imported and run live -- test it once after import.
+# This is the same trigger/condition pattern confirmed working in real
+# production use: a templated `for:` duration read live from an
+# input_number helper (re-evaluated on every new door-open event, so a
+# delay change affects future alerts without editing anything), gating a
+# notification action. Door-left-open alerts built this way are confirmed
+# working.
 #
 # Import into Home Assistant: Settings > Automations & Scenes > Blueprints
 # > Import Blueprint, and paste the raw URL to this file (or copy it

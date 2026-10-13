@@ -6,11 +6,25 @@
 # This is deliberately NOT a copy of any specific person's real personal
 # dashboard -- it only demonstrates the entities this project confirms
 # work (see docs/KNOWN_LIMITATIONS.md for what's deliberately left out).
+#
+# Pick and choose: each card below is independent -- delete any whole
+# card block you don't want, in any combination, and the rest keeps
+# working unchanged. None of them depend on each other.
+#   - Temperatures card: drop any of the 3 compartment pairs you don't
+#     have/want (e.g. no flex zone) by deleting just those 2 lines.
+#   - Doors card: drop either door row the same way.
+#   - History graph: delete the whole card if you don't want graphing,
+#     or drop individual `entities:` lines to graph fewer compartments.
+#   - Door-Open Alert card: only include this if you've also imported the
+#     blueprint (see below) -- safe to leave out entirely otherwise.
 
 title: Fridge
 path: fridge
 icon: mdi:fridge
 cards:
+  # Card 1 (optional) -- actual + setpoint temperatures. Delete any
+  # compartment pair (2 lines) you don't have, or the whole card if you
+  # don't want this view at all.
   - type: entities
     title: Toshiba Refrigerator
     entities:
@@ -27,6 +41,8 @@ cards:
       - entity: sensor.YOUR_DEVICE_ID_flex_zone_setting_temp
         name: Flex Zone — Setpoint
 
+  # Card 2 (optional) -- upper/lower door status. Delete either row, or
+  # the whole card, independently of everything else here.
   - type: glance
     title: Doors
     entities:
@@ -35,6 +51,9 @@ cards:
       - entity: binary_sensor.YOUR_DEVICE_ID_freezer_door
         name: Lower doors
 
+  # Card 3 (optional) -- temperature history. Change hours_to_show for a
+  # longer/shorter window, drop an entities: line to graph fewer
+  # compartments, or delete the whole card if you don't want graphing.
   - type: history-graph
     title: Temperature history (48h)
     hours_to_show: 48
@@ -46,20 +65,20 @@ cards:
       - entity: sensor.YOUR_DEVICE_ID_flex_zone_actual_temp
         name: Flex Zone
 
-  # Optional: only add this card if you've imported
-  # blueprints/door_left_open_alert.yaml (see the main README) and created
-  # the input_number helper it needs (Settings > Devices & Services >
-  # Helpers > Number). Shown here so the delay is easy to find/adjust from
-  # the same dashboard -- not required for the temperature/door entities
-  # above to work on their own.
+  # Card 4 (optional) -- only add this if you've imported
+  # blueprints/door_left_open_alert.yaml (see the main README/USER_GUIDE
+  # step 7a) and created the input_number helper it needs (Settings >
+  # Devices & Services > Helpers > Number). Shown here so the delay is
+  # easy to find/adjust from the same dashboard -- not required for the
+  # temperature/door entities above to work on their own.
   - type: entities
     title: Door-Open Alert
     entities:
       - entity: input_number.YOUR_DOOR_ALERT_DELAY_HELPER
         name: Alert delay (seconds)
 
-  # Optional: power monitoring is NOT provided by the Toshiba LAN
-  # protocol itself (see docs/KNOWN_LIMITATIONS.md). If you've paired an
-  # independent smart plug, add its entities as a separate card here --
+  # Card 5 (optional) -- power monitoring is NOT provided by the Toshiba
+  # LAN protocol itself (see docs/KNOWN_LIMITATIONS.md). If you've paired
+  # an independent smart plug, add its entities as a separate card here --
   # deliberately not included above since this project doesn't know
   # whether you have one, or what it's called.
