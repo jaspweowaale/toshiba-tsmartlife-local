@@ -32,11 +32,31 @@ that's genuinely useful information this guide doesn't have yet.
 - Your appliance's serial number, found inside the fridge door, or in the
   TSmartLife app's Device Information screen.
 - A computer to run this project's CLI on (does not need to be the same
-  machine as Home Assistant) — Python 3.12+.
+  machine as Home Assistant) — **Python 3.12 or newer**, see step 1a
+  below if you don't already have it.
 - The 4 shared TSmartLife "app-level" constants (see step 3) are now
   **built in by default** — nothing to obtain yourself for this part. See
   [`TOKEN_ONBOARDING.md`](TOKEN_ONBOARDING.md) for exactly what these are
   and why shipping a default for them is considered safe.
+
+## 1a. Install Python 3.12+ — [TESTED pattern, standard tooling]
+
+Skip this if `python3 --version` (macOS/Linux) or `py --version` (Windows)
+already reports 3.12 or newer.
+
+- **Windows**: install from
+  [python.org/downloads](https://www.python.org/downloads/) or
+  `winget install Python.Python.3.12` in PowerShell. During the
+  python.org installer, tick **"Add python.exe to PATH"** — this is the
+  single most common Windows setup mistake for any Python tool, not just
+  this one.
+- **macOS**: `brew install python@3.12` (Homebrew), or the official
+  installer from python.org. The system-provided `/usr/bin/python3` on
+  macOS is often older than 3.12 and should not be relied on here.
+- **Linux**: use your distribution's package manager, e.g.
+  `sudo apt install python3.12 python3.12-venv` (Debian/Ubuntu),
+  `sudo dnf install python3.12` (Fedora), or `pyenv install 3.12` if your
+  distro only ships an older version by default.
 
 ## 2. Install the HA-side integration — [TESTED]
 
@@ -58,14 +78,44 @@ on a *different* TSmartLife app variant/market and know your own 4
 values, you can still override the built-in default — see
 `TOKEN_ONBOARDING.md`.
 
-## 4. Run the onboarding CLI — [TESTED offline against 36 mocked-response cases; NOT run against the live cloud this session, per safety rules]
+## 4. Install and run the onboarding CLI — [TESTED offline against 36 mocked-response cases; NOT run against the live cloud this session, per safety rules]
+
+First, get this project's own source (clone with `git`, or download and
+extract the "Code → Download ZIP" archive from
+[the repository page](https://github.com/jaspweowaale/toshiba-tsmartlife-local)
+if you don't have `git`), then `cd` into that directory. The commands
+below are the same on every platform except how you create/activate the
+virtual environment:
+
+**Windows (PowerShell)**:
+```powershell
+py -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -e .
+```
+
+**macOS / Linux**:
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```
+
+`pip install -e .` alone is enough — this project's own `pyproject.toml`
+already declares `midea-lan` as a dependency and pip fetches it
+automatically from its GitHub repository (currently our own fork's
+branch, not upstream directly — see [`NOTICE.md`](../NOTICE.md) for why);
+there is no separate `midea-lan` install step.
+
+Then, with the virtual environment still active, run:
 
 ```bash
-pip install -e "git+https://github.com/wuwentao/midea-lan.git#egg=midea-lan"
-pip install -e .   # from this project's own directory
-
 toshiba-tsmartlife-onboard
 ```
+
+(On Windows, if the bare command isn't found for any reason, the
+equivalent is `py -m toshiba_tsmartlife_local.onboard` — same arguments
+either way.)
 
 Enter your email and password when prompted. If your account has more
 than one appliance, you'll see a numbered list to choose from (with

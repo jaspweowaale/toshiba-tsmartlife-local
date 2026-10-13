@@ -42,15 +42,77 @@ that one model.
 If you run this successfully against a *different* Toshiba model, market,
 or appliance category (e.g. the TSmartLife-paired washing machine
 mentioned in
-[upstream issue #364](https://github.com/wuwentao/midea_ac_lan/issues/364)):
-please open an issue with:
-- The exact model number and market.
-- Whether the same 4 app-level constants worked, or you needed different
-  ones (do **not** paste the actual values into the issue).
-- Which entities you confirmed working/not working.
+[upstream issue #364](https://github.com/wuwentao/midea_ac_lan/issues/364)),
+please open an issue — this is genuinely useful and will be used to widen
+the README's "Status" table. Don't assume it's obvious or not worth
+reporting; a negative/partial result ("ran, but door sensors didn't work")
+is also useful, not just a full success.
 
-This is genuinely useful and will be used to widen the README's "Status"
-table — please don't assume it's obvious or not worth reporting.
+### What to include
+
+- The exact model number (printed inside the appliance door, or in the
+  TSmartLife app's Device Information screen) and market/country.
+- Whether the same built-in 4 app-level constants worked as-is, or you
+  needed your own different values (do **not** paste the actual values
+  into the issue — see "Redacting personal identifiers" below).
+- Which entities you confirmed working, and which didn't (see "Reporting
+  unsupported sensor fields" below) — exact entity names, e.g.
+  `freezer_actual_temp`, not a vague "temperatures worked."
+- The Midea device type (`0xCA`, or whatever `python -m midealan.cli
+  discover` reports for your appliance) and protocol version, if
+  different from this project's tested `0xCA`/V3.
+
+### Redacting personal identifiers
+
+Before posting anything (an issue, a log excerpt, a screenshot), remove:
+
+- Your account email/username and password.
+- Your appliance's full serial number and its numeric device ID (the
+  first few/last few characters are fine if you want to show the
+  *format*, e.g. for confirming a device-type byte, but not the whole
+  value).
+- Your home's public/local IP address.
+- The LAN `token`/`key` pair this project's CLI prints — these are
+  specific to your appliance; never share them anywhere, including here.
+
+If you're not sure whether something is safe to post, leave it out and
+describe it instead (e.g. "a 24-character hex serial number" rather than
+the actual string).
+
+### Reporting unsupported/sentinel sensor fields
+
+If an entity exists in `midea_ac_lan`'s generic 0xCA table but never
+reports a real value on your unit (stays `unknown`/`unavailable`, or
+reports an implausible constant), that's useful to report too — see
+[`docs/KNOWN_LIMITATIONS.md`](docs/KNOWN_LIMITATIONS.md) for the pattern
+this project already found on its one tested unit (`humidity`,
+`electronic_smell`, `right_flex_zone_*`). Include:
+- The entity's exact name.
+- How long you observed it (a single `unknown` right after setup is less
+  conclusive than days of consistent `unknown`/a constant value).
+- Whether it's listed as a real feature in your appliance's own manual —
+  that distinguishes "not implemented on this model" from "name exists in
+  the generic table but genuinely doesn't apply to this unit."
+
+### Submitting a compatibility improvement
+
+Two different kinds of change end up looking similar but belong in
+different places:
+
+- **A documentation-only update** (adding your confirmed-working model
+  to this project's README "Status" section, or a note in
+  `docs/KNOWN_LIMITATIONS.md`) belongs **here**, in this repository — open
+  a PR against this project.
+- **An actual protocol/entity-decoding change** (e.g. your model needs a
+  new field decoded, or a different device-type byte handled) belongs
+  **upstream**, in [`midea-lan`](https://github.com/wuwentao/midea-lan)
+  or [`midea_ac_lan`](https://github.com/wuwentao/midea_ac_lan) — this
+  project has no protocol code of its own to change (see
+  `docs/ARCHITECTURE.md`). Open that PR/issue against the upstream repo
+  instead, and feel free to link back here for context.
+
+If you're unsure which bucket your change falls into, open an issue here
+first and ask — that's cheaper than guessing wrong.
 
 ## Contributing safely
 

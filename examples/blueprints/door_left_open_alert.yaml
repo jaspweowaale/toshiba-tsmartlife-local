@@ -49,15 +49,23 @@ blueprint:
       selector:
         action: {}
 
+# NOTE: this must be `trigger_variables:`, not a plain top-level
+# `variables:` -- Home Assistant only makes a top-level `variables:` block
+# available to `condition:`/`action:`, not to templates evaluated inside
+# `trigger:` itself (the `for:` duration above is evaluated as part of the
+# trigger). Using plain `variables:` here would make `delay_helper`
+# undefined at trigger-evaluation time and the blueprint would fail to
+# import/fire correctly. `trigger_variables:` is the key HA provides
+# specifically for this case.
+trigger_variables:
+  delay_helper: !input delay_helper
+
 trigger:
   - platform: state
     entity_id: !input door_sensor
     to: "on"
     for:
       seconds: "{{ states(delay_helper) | int(60) }}"
-
-variables:
-  delay_helper: !input delay_helper
 
 condition:
   - condition: state

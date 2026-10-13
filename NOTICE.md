@@ -30,6 +30,15 @@ progress, not yet merged, draft status as of this writing). That work, and
 this project, were both produced with the assistance of Claude Code
 (Anthropic), directed by the appliance's owner.
 
+**Because of that unmerged status**, this project's `pyproject.toml`
+currently depends on our own fork's branch
+(`jaspweowaale/midea-lan@feat/tsmartlife-cloud-draft`, the exact branch PR
+#198 is built from) rather than plain `wuwentao/midea-lan@main` — upstream
+`main` does not yet define TSmartLife cloud support at all, so depending
+on it directly would make this entire tool non-functional. This is a
+temporary, clearly-marked pin (see the comment in `pyproject.toml`); it
+will switch back to the plain upstream URL once PR #198 merges.
+
 ## No private data in this repository
 
 No real application keys, device LAN tokens/keys, account passwords,

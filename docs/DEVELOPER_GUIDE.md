@@ -34,7 +34,17 @@ app sometimes share build-time constants and sometimes don't. If you
 independently obtain your own market's 4 values and confirm the CLI works
 end-to-end, please report back (sanitized — do not paste the actual
 values in an issue) so this document can note which markets are confirmed
-to share constants vs. not.
+to share constants vs. not. See
+[`CONTRIBUTING.md`](../CONTRIBUTING.md)'s "Reporting another model that
+works" section for exactly what to include and how to redact it — the
+short version is: report that it worked and which entities you confirmed,
+never the actual constant/token/serial-number values themselves.
+
+Importantly: a model/market being untested is not a defect to hide. This
+project's own README only lists what's actually been verified end-to-end
+on a real device (currently exactly one) — when documenting a new
+model/market, add it as its own row/entry marked by what's actually been
+confirmed, rather than assuming it behaves identically to the tested one.
 
 ## Running the tests
 

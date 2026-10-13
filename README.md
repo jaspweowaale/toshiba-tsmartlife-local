@@ -106,13 +106,30 @@ the upstream [`midea-lan`](https://github.com/wuwentao/midea-lan) library
 ## Installation
 
 ```bash
-pip install "midea-lan @ git+https://github.com/wuwentao/midea-lan.git"
 pip install -e .
 ```
 
-(`midea-lan` is not confirmed published to PyPI under that exact name as
-of this writing — the git URL form above always works regardless. If it
-later ships on PyPI, a plain `pip install midea-lan` will also work.)
+That single command is enough: this project's own `pyproject.toml`
+already declares `midea-lan` as a dependency via its GitHub URL, so pip
+fetches and installs it automatically — no separate install step needed.
+
+Two things worth knowing about that dependency:
+- `midea-lan` is not confirmed published to PyPI under that exact name as
+  of this writing, which is why it's pinned to a GitHub URL rather than a
+  plain package name.
+- That URL currently points at **our own fork's branch**
+  (`jaspweowaale/midea-lan@feat/tsmartlife-cloud-draft`), not plain
+  `wuwentao/midea-lan@main` — the TSmartLife cloud support this project
+  needs is still an open, unmerged draft
+  ([PR #198](https://github.com/wuwentao/midea-lan/pull/198)); upstream
+  `main` alone does not yet include it. See
+  [`NOTICE.md`](NOTICE.md) for the full explanation. This will switch back
+  to plain upstream once that PR merges.
+
+**For a full platform-by-platform walkthrough (installing Python itself,
+creating a virtual environment, Windows/macOS/Linux-specific commands),
+see [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) step 1a/4** — this section
+assumes you already have Python 3.12+ and pip working.
 
 ## Usage
 

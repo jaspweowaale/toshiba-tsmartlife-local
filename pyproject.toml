@@ -10,7 +10,14 @@ readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.12"
 dependencies = [
-  "midea-lan @ git+https://github.com/wuwentao/midea-lan.git",
+  # NOTE: pinned to our own fork's branch, not upstream wuwentao/midea-lan@main.
+  # The TSmartLife cloud provider this project needs is still an open, unmerged
+  # draft PR upstream (wuwentao/midea-lan#198) -- plain upstream main does not
+  # define midealan.cloud.SUPPORTED_CLOUDS["TSmartLife"] at all, so installing
+  # from it would make this entire tool non-functional (KeyError: 'TSmartLife'
+  # the moment onboard.py runs). Switch this back to the plain upstream URL once
+  # PR #198 merges.
+  "midea-lan @ git+https://github.com/jaspweowaale/midea-lan.git@feat/tsmartlife-cloud-draft",
   "aiohttp",
 ]
 
