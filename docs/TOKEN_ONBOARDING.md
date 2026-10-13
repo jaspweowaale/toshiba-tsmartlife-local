@@ -91,6 +91,33 @@ reproduce this**, and this project does not ask anyone to try.
 - This project takes no position on which trade-off is correct — that is
   the maintainer's call.
 
+## Checked this round, for completeness (none of these unblock layer 2)
+
+- **`midea_ac_lan` has graduated into Home Assistant Core** (reported as
+  "Midea" integration since HA 2026.8, per Home Assistant's own community/
+  docs — not independently re-verified against `home-assistant/core`'s
+  source this round, flagged as a lower-confidence claim than the items
+  below that were checked against actual source). If accurate, recent HA
+  installs may not need HACS/manual installation of `midea_ac_lan` at all.
+  This would simplify step 4 below, but does **not** touch layer 2.
+- **"Toshiba Lifestyle" is a different, already-solved integration —
+  verified against actual source, not just the name.** Checked
+  `upstream/main` of `midea-lan` directly: its `SUPPORTED_CLOUDS` table
+  has exactly 5 entries — 美的美居 (`MeijuCloud`), `SmartHome`, `Midea Air`,
+  `NetHome Plus`, `Ariston Clima` — **no `TSmartLife`, no "Toshiba
+  Lifestyle" entry anywhere**. "Toshiba Lifestyle" (reported as an HA-Core
+  discovery label with ~1,520 installs) almost certainly covers a
+  *different* Toshiba product line (air conditioners, going through one of
+  those 5 already-solved clouds) — **not** the TSmartLife-branded
+  refrigerator/kitchen-appliance app this project targets. Do not conflate
+  the two; a working "Toshiba Lifestyle" setup does not imply TSmartLife
+  works.
+- **No other TSmartLife fork/tool found** (web search, this round):
+  `wuwentao/midea_ac_lan#364` (the original feature request, still open,
+  now also referencing a Toshiba washing machine with the same unsolved
+  cloud) and our own PR #198 remain the only places TSmartLife support is
+  even attempted, anywhere found.
+
 ## What would change this
 
 - Midea/Toshiba publishing an official, free, personal-use token-issuance

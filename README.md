@@ -88,29 +88,67 @@ later ships on PyPI, a plain `pip install midea-lan` will also work.)
 
 ## Usage
 
-See [`docs/TOKEN_ONBOARDING.md`](docs/TOKEN_ONBOARDING.md) for the full
-walkthrough, including the one real blocker this project has **not**
-solved (read it before assuming this "just works" for you). Short version:
+**For a plain, step-by-step walkthrough aimed at an ordinary owner, see
+[`docs/USER_GUIDE.md`](docs/USER_GUIDE.md).** This section is the terse
+reference version. See
+[`docs/TOKEN_ONBOARDING.md`](docs/TOKEN_ONBOARDING.md) for the one real
+blocker this project has **not** solved — read it before assuming this
+"just works" for you.
+
+The 4 shared app-level constants (see `TOKEN_ONBOARDING.md`) can be
+supplied two ways — pick whichever you prefer:
 
 ```bash
-export TSMARTLIFE_APP_ID="..."      # see docs/TOKEN_ONBOARDING.md
+# Option A: environment variables
+export TSMARTLIFE_APP_ID="..."
 export TSMARTLIFE_APP_KEY="..."
 export TSMARTLIFE_IOT_KEY="..."
 export TSMARTLIFE_HMAC_KEY="..."
 
-toshiba-tsmartlife-onboard \
-  --username "your-tsmartlife-account-email" \
-  --device-sn "the-serial-number-printed-inside-your-fridge-door"
+# Option B: a local JSON file (never commit it -- .gitignore already
+# excludes *.secret/.env/*_restricted/, but this file's name is your
+# choice, so name it something .gitignore will actually catch, or add
+# your own entry)
+#   {"app_id": "...", "app_key": "...", "iot_key": "...", "hmac_key": "..."}
+export TSMARTLIFE_CONFIG_FILE=~/.config/tsmartlife/app_config.json
+# -- or pass --config-file explicitly each time instead of exporting this
 ```
 
-This prompts for your password (never passed as a plain CLI argument),
-logs in to the TSmartLife cloud **once**, retrieves your specific
-appliance's LAN `token`/`key`, prints them, and exits. It does not store
-your password anywhere. Paste the printed `token`/`key` into
-`midea_ac_lan`'s config flow ("Configure manually" step) in Home Assistant.
+Then:
+
+```bash
+toshiba-tsmartlife-onboard \
+  --device-sn "the-serial-number-printed-inside-your-fridge-door"
+  # --username is optional -- you'll be prompted if you omit it
+```
+
+This prompts for your email (if not given) and password (always hidden,
+never a plain CLI argument or logged), logs in to the TSmartLife cloud
+**once**, retrieves your specific appliance's LAN `token`/`key`, and
+prints them. Add `--output-file path/to/result.json` to also save them to
+a file created with owner-only permissions (POSIX systems). It does not
+store your password anywhere, and every expected failure (missing config,
+wrong password, network error, appliance not found) produces a plain-
+language message — not a raw Python traceback. Paste the resulting
+`token`/`key` into your Home Assistant integration's "Configure manually"
+step (see `docs/USER_GUIDE.md` for the full HA-side walkthrough).
+
+### Install notes by platform
+
+- **Linux/macOS**: `pip install -e .` inside a virtualenv works as shown
+  above. `--output-file`'s owner-only permission restriction (POSIX file
+  mode 0600) is applied automatically.
+- **Windows**: same `pip install -e .` inside a virtualenv (PowerShell or
+  cmd). The POSIX permission step for `--output-file` is skipped
+  automatically (Windows ACLs work differently) — the file is still only
+  written if you explicitly ask for it; prefer the default terminal-only
+  output if that matters to you. Run via `py -m toshiba_tsmartlife_local.onboard`
+  or the installed `toshiba-tsmartlife-onboard.exe` console script, same
+  arguments either way.
 
 ## Documentation
 
+- [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) — plain step-by-step walkthrough, tested/untested/blocked marked per step
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — why this scope, not a full integration
 - [`docs/TOKEN_ONBOARDING.md`](docs/TOKEN_ONBOARDING.md) — the real onboarding story, blockers included
 - [`docs/SECURITY_AND_PRIVACY.md`](docs/SECURITY_AND_PRIVACY.md)
