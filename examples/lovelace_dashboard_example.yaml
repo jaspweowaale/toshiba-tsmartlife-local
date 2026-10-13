@@ -1,0 +1,53 @@
+# Example Lovelace view for a Toshiba TSmartLife refrigerator.
+#
+# Generic placeholders only -- substitute YOUR_DEVICE_ID with your own
+# appliance's numeric ID (visible in Settings > Devices & Services >
+# your Midea AC LAN device entry, or in each entity's own entity_id).
+# This is deliberately NOT a copy of any specific person's real personal
+# dashboard -- it only demonstrates the entities this project confirms
+# work (see docs/KNOWN_LIMITATIONS.md for what's deliberately left out).
+
+title: Fridge
+path: fridge
+icon: mdi:fridge
+cards:
+  - type: entities
+    title: Toshiba Refrigerator
+    entities:
+      - entity: sensor.YOUR_DEVICE_ID_refrigerator_actual_temp
+        name: Refrigerator — Actual
+      - entity: sensor.YOUR_DEVICE_ID_refrigerator_setting_temp
+        name: Refrigerator — Setpoint
+      - entity: sensor.YOUR_DEVICE_ID_freezer_actual_temp
+        name: Freezer — Actual
+      - entity: sensor.YOUR_DEVICE_ID_freezer_setting_temp
+        name: Freezer — Setpoint
+      - entity: sensor.YOUR_DEVICE_ID_flex_zone_actual_temp
+        name: Flex Zone — Actual
+      - entity: sensor.YOUR_DEVICE_ID_flex_zone_setting_temp
+        name: Flex Zone — Setpoint
+
+  - type: glance
+    title: Doors
+    entities:
+      - entity: binary_sensor.YOUR_DEVICE_ID_refrigerator_door
+        name: Upper doors
+      - entity: binary_sensor.YOUR_DEVICE_ID_freezer_door
+        name: Lower doors
+
+  - type: history-graph
+    title: Temperature history (48h)
+    hours_to_show: 48
+    entities:
+      - entity: sensor.YOUR_DEVICE_ID_refrigerator_actual_temp
+        name: Refrigerator
+      - entity: sensor.YOUR_DEVICE_ID_freezer_actual_temp
+        name: Freezer
+      - entity: sensor.YOUR_DEVICE_ID_flex_zone_actual_temp
+        name: Flex Zone
+
+  # Optional: power monitoring is NOT provided by the Toshiba LAN
+  # protocol itself (see docs/KNOWN_LIMITATIONS.md). If you've paired an
+  # independent smart plug, add its entities as a separate card here --
+  # deliberately not included above since this project doesn't know
+  # whether you have one, or what it's called.

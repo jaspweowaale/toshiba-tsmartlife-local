@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "toshiba-tsmartlife-local"
+version = "0.1.0"
+description = "Onboarding helper to get a Toshiba TSmartLife appliance's LAN token/key for use with midea_ac_lan in Home Assistant."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.12"
+dependencies = [
+  "midea-lan @ git+https://github.com/wuwentao/midea-lan.git",
+]
+
+[project.scripts]
+toshiba-tsmartlife-onboard = "toshiba_tsmartlife_local.onboard:main"
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-asyncio"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,69 @@
+# Optional automation blueprint: alert when a door group is left open.
+#
+# This is a convenience add-on, NOT a replacement for the actual LAN
+# integration (midea_ac_lan) or for this project's onboarding CLI -- it
+# only works once door-group binary_sensor entities already exist, which
+# requires both of those first. See the main README.
+#
+# This mirrors the exact trigger/condition pattern already confirmed
+# working in real production use (templated `for:` duration read live
+# from an input_number helper, re-evaluated on every new door-open event
+# so a delay change affects future alerts without editing anything).
+# The underlying automation shape is proven in real production use; this
+# specific blueprint wrapper (parameterizing it via !input) has not
+# itself been imported and run live -- test it once after import.
+#
+# Import into Home Assistant: Settings > Automations & Scenes > Blueprints
+# > Import Blueprint, and paste the raw URL to this file (or copy it
+# manually into config/blueprints/automation/).
+blueprint:
+  name: Door left open alert (generic)
+  description: >
+    Notifies when a door/door-group binary_sensor stays "on" (open) longer
+    than an adjustable delay (an input_number helper you create yourself,
+    e.g. via Settings > Devices & Services > Helpers > Number). One alert
+    per continuous opening; resets automatically when the door closes.
+    Works with any binary_sensor -- not tied to any one integration.
+  domain: automation
+  input:
+    door_sensor:
+      name: Door sensor
+      description: The binary_sensor that is "on" while the door is open.
+      selector:
+        entity:
+          domain: binary_sensor
+    delay_helper:
+      name: Alert delay helper
+      description: >
+        An input_number helper holding the delay in seconds. Create one
+        first (Settings > Devices & Services > Helpers > Number), then
+        select it here.
+      selector:
+        entity:
+          domain: input_number
+    notify_action:
+      name: Notification action
+      description: >
+        Whatever action(s) you want run when the alert fires -- e.g. a
+        notify.* service call, or a script.
+      selector:
+        action: {}
+
+trigger:
+  - platform: state
+    entity_id: !input door_sensor
+    to: "on"
+    for:
+      seconds: "{{ states(delay_helper) | int(60) }}"
+
+variables:
+  delay_helper: !input delay_helper
+
+condition:
+  - condition: state
+    entity_id: !input door_sensor
+    state: "on"
+
+action: !input notify_action
+
+mode: single
