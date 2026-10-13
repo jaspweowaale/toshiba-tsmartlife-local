@@ -83,15 +83,17 @@ any dashboard, automation, or notification:
 
 ## Screenshots / example dashboard
 
-No live screenshot yet (optional/not blocking) — this project doesn't
-have a safe way to capture one without touching a real, in-production
-Home Assistant dashboard, which isn't something to do just for a README.
-Instead,
-[`examples/lovelace_dashboard_example.yaml`](examples/lovelace_dashboard_example.yaml)
-is a complete, ready-to-paste Lovelace view (standard Home Assistant
-cards only, no custom/HACS cards needed) showing exactly what you get —
-and every card in it is independent, so you can include only the parts
-you want:
+![Home Assistant dashboard showing live Toshiba refrigerator, freezer, and flex-zone temperatures with setpoints, upper/lower door status, an adjustable door-open alert, and 48-hour temperature/door history graphs](docs/images/toshiba-lan-dashboard.png)
+
+*A real Home Assistant dashboard, showing live data from the actual
+tested unit (Toshiba `GR-RF900WI-PMV(06)-MG`, Vietnam) over the local
+network — not a mockup. This particular layout is just one example: the
+cards, which sensors are shown, and whether history/door-alerts are
+included are all yours to customize — see
+[`examples/lovelace_dashboard_example.yaml`](examples/lovelace_dashboard_example.yaml),
+a complete, ready-to-paste Lovelace view (standard Home Assistant cards
+only, no custom/HACS cards needed) demonstrating the same entities, where
+every card is independent so you can include only the parts you want:*
 
 - An **entities card** with all three actual temperatures and their
   setpoints side by side.
