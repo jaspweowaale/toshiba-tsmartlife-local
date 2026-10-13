@@ -120,7 +120,10 @@ either way.)
 Enter your email and password when prompted. If your account has more
 than one appliance, you'll see a numbered list to choose from (with
 exactly one appliance, it's used automatically). On success, it prints
-one or more `token`/`key` pairs — copy them.
+one or more `token`/`key` pairs — copy them. Add
+`--output-file path/to/result.json` to also save them to a file (created
+with owner-only permissions on Linux/macOS) instead of only printing to
+the terminal.
 
 > **⚠ Before you run this**: a fresh cloud login is known to momentarily
 > displace the official TSmartLife app's own session on your phone — you

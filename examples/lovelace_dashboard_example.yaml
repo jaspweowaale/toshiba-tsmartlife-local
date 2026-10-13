@@ -46,6 +46,18 @@ cards:
       - entity: sensor.YOUR_DEVICE_ID_flex_zone_actual_temp
         name: Flex Zone
 
+  # Optional: only add this card if you've imported
+  # blueprints/door_left_open_alert.yaml (see the main README) and created
+  # the input_number helper it needs (Settings > Devices & Services >
+  # Helpers > Number). Shown here so the delay is easy to find/adjust from
+  # the same dashboard -- not required for the temperature/door entities
+  # above to work on their own.
+  - type: entities
+    title: Door-Open Alert
+    entities:
+      - entity: input_number.YOUR_DOOR_ALERT_DELAY_HELPER
+        name: Alert delay (seconds)
+
   # Optional: power monitoring is NOT provided by the Toshiba LAN
   # protocol itself (see docs/KNOWN_LIMITATIONS.md). If you've paired an
   # independent smart plug, add its entities as a separate card here --
