@@ -1,5 +1,24 @@
 # Troubleshooting
 
+**Windows: "running scripts is disabled on this system" when activating
+the virtual environment** — PowerShell blocks `.venv\Scripts\Activate.ps1`
+by default on most fresh Windows installs; this is a Windows/PowerShell
+default, not specific to this project. Fix, in an **admin** PowerShell
+window, once per machine:
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+Then retry the activation command in a normal (non-admin) PowerShell
+window. If you'd rather not change the execution policy at all, use
+`cmd.exe` instead and run `.venv\Scripts\activate.bat`, which isn't
+affected by this setting.
+
+**Windows: `py` is not recognized** — some Windows Python installs don't
+register the `py` launcher (e.g. a Microsoft Store install, or an older
+installer run without "Add to PATH"). Use `python` instead of `py` for
+every command in this guide if that happens (`python -m venv .venv`,
+etc.) — they're equivalent once Python is actually on your `PATH`.
+
 **"Missing required environment variable(s)"** — one or more of the 4
 `TSMARTLIFE_*` variables isn't set. See `docs/TOKEN_ONBOARDING.md` — if
 you don't have these values, that document explains the current state

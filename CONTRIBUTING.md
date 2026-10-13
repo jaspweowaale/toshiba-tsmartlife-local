@@ -52,6 +52,11 @@ is also useful, not just a full success.
 
 - The exact model number (printed inside the appliance door, or in the
   TSmartLife app's Device Information screen) and market/country.
+- The TSmartLife app version you used (Settings/About screen in the app,
+  or your phone's app-store listing) — this project hasn't tracked a
+  specific tested app version itself (nothing in its own testing depended
+  on pinning one), so there's nothing to compare against yet; your report
+  is what starts that record.
 - Whether the same built-in 4 app-level constants worked as-is, or you
   needed your own different values (do **not** paste the actual values
   into the issue — see "Redacting personal identifiers" below).
@@ -61,6 +66,18 @@ is also useful, not just a full success.
 - The Midea device type (`0xCA`, or whatever `python -m midealan.cli
   discover` reports for your appliance) and protocol version, if
   different from this project's tested `0xCA`/V3.
+
+### Reporting errors/diagnostics safely
+
+If something fails, the exact text this project's own CLI prints after
+`ERROR:` is normally safe to paste as-is — every expected failure path is
+designed to produce a plain-language message with no password, token, or
+key in it (see `onboard.py`'s `OnboardingError` handling). The one
+exception: if you ever see a raw Python traceback instead of a clean
+`ERROR:` line, that's itself a bug worth reporting (the tool isn't
+supposed to let that happen) — but double-check that traceback for
+anything identifying before pasting it, since an unexpected code path is
+exactly the kind of place a value could leak unintentionally.
 
 ### Redacting personal identifiers
 

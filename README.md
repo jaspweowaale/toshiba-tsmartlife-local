@@ -116,6 +116,7 @@ Verified end-to-end against exactly one physical unit so far:
 | Model | Toshiba `GR-RF900WI-PMV(06)-MG` |
 | Market | Vietnam |
 | App | TSmartLife ("oversea" variant) |
+| App version tested | Not tracked — this project's own testing didn't depend on a specific version, so none is recorded |
 | Midea device type | `0xCA` (refrigerator) |
 | Protocol | LAN V3 |
 | Internal model code | `310A079W` |

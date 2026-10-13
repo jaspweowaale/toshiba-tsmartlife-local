@@ -93,6 +93,10 @@ py -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -e .
 ```
+(If the activation line errors with "running scripts is disabled on this
+system," or `py` isn't recognized, see
+[`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) — both are common, fixable
+Windows/PowerShell defaults, not bugs in this project.)
 
 **macOS / Linux**:
 ```bash
