@@ -1,12 +1,35 @@
 # toshiba-tsmartlife-local
 
-A small, focused **onboarding helper** that gets a Toshiba TSmartLife
+> ## ⚠ DEVELOPER PREVIEW
+> This is an early, unofficial, independent developer preview — not a
+> finished product, not an official release, and **not affiliated with,
+> endorsed by, or supported by Toshiba or Midea** in any way. It uses
+> the existing open-source Midea LAN / Home Assistant integration
+> ([`midea_ac_lan`](https://github.com/wuwentao/midea_ac_lan)) for all
+> actual device communication — this project only helps obtain the one
+> piece of information that integration needs for a TSmartLife-paired
+> appliance. **Independent onboarding is NOT yet fully solved**: the
+> shared TSmartLife app-level cloud configuration this project's CLI
+> needs has no publicly available, reproducible extraction method today
+> — see [`docs/TOKEN_ONBOARDING.md`](docs/TOKEN_ONBOARDING.md) for the
+> exact, honest state of that blocker before assuming this works for you
+> out of the box.
+>
+> **This project does NOT**: claim support for any Toshiba model other
+> than the one named below, claim a fully cloud-free *initial* pairing
+> (a one-time cloud login by you, with your own account, is required to
+> obtain your appliance's LAN token/key), provide automatic/bundled
+> token extraction, or implement a complete standalone Home Assistant
+> integration (it deliberately reuses the existing one).
+
+A small, focused **onboarding helper** that, once you have the
+information in `TOKEN_ONBOARDING.md`, gets a Toshiba TSmartLife
 ("oversea" app, `com.midea.ai.toshiba.oversea.inhouse`) refrigerator's
-local LAN token/key so it can run entirely on your home network with
-[Home Assistant](https://www.home-assistant.io/), using the existing,
-already-public
-[`midea_ac_lan`](https://github.com/wuwentao/midea_ac_lan) HACS
-integration for everything else.
+local LAN token/key so that **temperature and door monitoring then run
+entirely on your home network** via
+[Home Assistant](https://www.home-assistant.io/) and the existing,
+already-public `midea_ac_lan` integration — no further cloud contact
+after that one-time onboarding step.
 
 **This project does not reimplement the LAN protocol, the Home Assistant
 integration, or the entity table.** `midea_ac_lan` already supports device
@@ -16,7 +39,7 @@ wrong move. The one piece that doesn't exist anywhere yet is a
 reproducible way to get the *credentials* `midea_ac_lan` needs for a
 TSmartLife-paired appliance. That's what this project is.
 
-## Status: experimental, single model verified
+## Status: developer preview, single model verified
 
 Verified against exactly one physical unit:
 
@@ -150,6 +173,8 @@ step (see `docs/USER_GUIDE.md` for the full HA-side walkthrough).
 
 - [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) — plain step-by-step walkthrough, tested/untested/blocked marked per step
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — why this scope, not a full integration
+- [`docs/APP_CREDENTIAL_SECURITY.md`](docs/APP_CREDENTIAL_SECURITY.md) — security/redistribution analysis of the 4 app-level constants
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to contribute, including reporting another working model
 - [`docs/TOKEN_ONBOARDING.md`](docs/TOKEN_ONBOARDING.md) — the real onboarding story, blockers included
 - [`docs/SECURITY_AND_PRIVACY.md`](docs/SECURITY_AND_PRIVACY.md)
 - [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)
