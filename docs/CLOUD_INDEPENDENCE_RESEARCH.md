@@ -197,6 +197,85 @@ entirely in the *pairing event itself* if done on the production fridge
 re-authenticate HA's integration). Recovery: the already-verified backup
 credential plus this project's existing re-pairing documentation.
 
+## 9. Method-2 credential test — 2026-10-15
+
+The restricted backup holds two credential pairs from the original cloud
+retrieval (`keys["1"]` and `keys["2"]`, matching the token-list parsing
+pattern in `cloud.py`'s `get_cloud_keys()`). Method-1 is the one in
+continuous production use. Method-2 had never been independently tested.
+
+**Result: method-2 authentication FAILS against the real device.** A fresh,
+independent LAN V3 connection attempt using `keys["2"]` was rejected by the
+device with an explicit error response (`...4552524f52` decodes to ASCII
+`ERROR`), distinct from a timeout or protocol-format error. The identical
+script, changed only in which credential pair it loads, succeeded immediately
+with method-1 moments before — ruling out a client-side bug as the cause.
+Interpretation: whatever distinguishes method-1 from method-2 in this cloud's
+token-list response, only one of the two pairs is actually live/valid against
+this specific device right now. Not yet determined which structural property
+of the two methods explains this, or whether it's specific to this device vs.
+general across the TSmartLife/`SmartHomeCloud` family.
+
+## 10. Live protocol attribute survey — 2026-10-15
+
+A single read-only general-status query (`refresh_status(True)`, method-1
+credentials, no control command) returned 31 populated fields out of the
+~101 distinct attributes the open-source `0xCA` protocol parser
+(`midealan/devices/ca/message.py`) is capable of decoding. This means a large
+majority of the protocol's defined surface isn't returned by this one query
+type — likely split across other query/command types this survey didn't
+exercise.
+
+**Confirmed live and correct**: `refrigerator_actual_temp` (7.0°C vs. 5°C
+setpoint), `freezer_actual_temp`, `flex_zone_actual_temp` (8.0°C vs. 5°C
+setpoint), `right_flex_zone_actual_temp` (-50.0°C vs. 0°C setpoint — likely
+an unused/disabled zone reporting a sentinel value, not a real reading),
+`refrigerator_door`/`freezer_door`/`flex_zone_door`/`bar_door` (all closed),
+`energy_consumption`, `electronic_smell` (on), `freezing_ice_machine_power`,
+and several boolean operating-mode flags (`holiday_mode`, `smart_mode`,
+`energy_saving_mode`, `moisturize_mode`, `preservation_mode`,
+`acme_freezing_mode`, `microcrystal_fresh`, `variable_mode` — all currently
+off/none).
+
+**Real-time anomaly, circumstantial defrost evidence, not confirmed**:
+`freezer_actual_temp` read **-2.0°C** during this survey — a large deviation
+from its -18°C setpoint, and a big swing from this same session's earlier
+read (-13.0°C) and the original Stage 4M baseline (-22.0°C). Independently
+cross-checked against the live HA entity for this device's freezer
+temperature, which showed the identical -2.0°C value at nearly the same
+timestamp — ruling out a read error. Door
+closed throughout. This matches the same pattern Stage 4R flagged as
+"circumstantially consistent with defrost, not confirmed" — still not
+confirmed, because `freezing_motor_deicing_status` (the actual deicing-status
+bit) was not among the 31 fields this particular query returned. No action
+taken; this is normal, automatic, self-correcting appliance behavior per
+Stage 4R's prior finding, not a fault requiring attention.
+
+## 11. TSmartLife app vs. LAN protocol vs. Home Assistant — feature matrix
+
+| Feature | LAN protocol (0xCA) | Live-verified this session | In Home Assistant today |
+|---|---|---|---|
+| Refrigerator/freezer/flex-zone actual temp | Yes | **Yes** | Yes |
+| Refrigerator/freezer/flex-zone setpoint | Yes | **Yes** | Yes |
+| Door status (4 zones) | Yes | **Yes** (all 4) | Only refrigerator/freezer exposed; flex-zone/bar-door fields exist but have never shown "on" in HA history (Stage 4R) |
+| Defrost/deicing status | Yes (`freezing_motor_deicing_status` + several related error/overtime bits) | Not returned by this query type | **No** — this is the actual gap, not a missing read capability |
+| Operating modes (holiday/smart/energy-saving/moisturize/preservation/acme-freezing/microcrystal-fresh/variable) | Yes, large set | Partially (7 of them, all off) | **No** — none of these appear to be exposed as HA entities |
+| Icemaker (power/status/water/full) | Yes | Partially (`freezing_ice_machine_power` only) | **No** |
+| Humidity control | Yes (`humidity`, `humidity_setting`, `smart_humidity`) | No (`humidity` returned `None` this query) | **No** |
+| Presence/radar sensing | Yes (`radar_mode`, `human_induction`) | Not queried | **No** |
+| Diagnostic/sensor-error flags (7+ distinct error bits) | Yes | Not queried | **No** |
+| Network/Wi-Fi status | Not found in this device's protocol fields | N/A | Unknown — if it exists at all, likely cloud-metadata only |
+| Firmware/auto-update | Not found in CA-specific fields | N/A | Partially — generic `update.*` entities exist at the integration level, likely cloud-sourced, not CA-protocol-specific |
+| Compressor/fan telemetry | No literal field found | N/A | **No** |
+
+**Bottom line**: the core comfort-relevant functions (temps, doors, the
+defrost question) are either already in HA or blocked only by upstream
+integration coverage, not by protocol capability — the LAN protocol already
+exposes what's needed. The larger gap is the appliance's secondary feature
+set (modes, icemaker, humidity, diagnostics), which the protocol clearly
+supports but neither this project nor the installed `midea_ac_lan` version
+currently surfaces anywhere.
+
 **Physical refrigerator access needed**: yes, if tested on the real device —
 this experiment cannot be run without an actual pairing event happening
 somewhere. Recommended: wait for a spare device, or get your explicit
