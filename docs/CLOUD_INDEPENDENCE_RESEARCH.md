@@ -121,14 +121,31 @@ easy local derivation; the evidence points toward (D)/(E), not (B).
 
 ## 6. Lua/plugin status
 
+**Update 2026-10-15**: upstream cloud-support PR
+https://github.com/wuwentao/midea-lan/pull/198 has **merged** into
+`wuwentao/midea-lan:main` (merge commit `6748eb6266eb756e038faf5d9024428aa94820ab`,
+merged by the maintainer). TSmartLife cloud support is now part of upstream
+main itself, independently confirmed via the GitHub API and a direct content
+check of `midealan/cloud.py` on `main`.
+
+The Lua/plugin test-coverage branch has been rebased directly onto real
+upstream `main` and opened as a proper cross-repo PR:
+**https://github.com/wuwentao/midea-lan/pull/215** (open, **draft** —
+deliberately not marked ready for review yet). The earlier fork-only stacked
+PR (https://github.com/jaspweowaale/midea-lan/pull/1), which existed only
+because #198 hadn't merged yet, has been closed with a comment pointing to
+#215.
+
 - `TSmartLifeCloud.download_lua`/`download_plugin` correctly inherit
   `SmartHomeCloud`'s implementation (verified structurally and via mocked
-  end-to-end tests — not yet exercised against the real cloud with this
-  device's real serial number).
-- Upstream cloud-support PR: https://github.com/wuwentao/midea-lan/pull/198
-  (open, CodeRabbit findings addressed).
-- Lua/plugin test-coverage PR (stacked on #198, same-fork since #198 isn't
-  merged yet): https://github.com/jaspweowaale/midea-lan/pull/1
+  end-to-end tests — **still not yet exercised against the real cloud** with
+  this device's real serial number; that live test remains a separate,
+  explicitly-gated step, not yet executed).
+- Full suite: 2865/2865 passing against current upstream `main`, ruff clean,
+  no new mypy issues.
+- PR #215 is intentionally left in draft state until the live validation
+  actually happens — it will be updated with real results and marked ready
+  for review at that point, not before.
 
 ## 7. App functions with protocol support but not yet in Home Assistant
 
