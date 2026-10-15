@@ -121,31 +121,61 @@ easy local derivation; the evidence points toward (D)/(E), not (B).
 
 ## 6. Lua/plugin status
 
-**Update 2026-10-15**: upstream cloud-support PR
-https://github.com/wuwentao/midea-lan/pull/198 has **merged** into
-`wuwentao/midea-lan:main` (merge commit `6748eb6266eb756e038faf5d9024428aa94820ab`,
-merged by the maintainer). TSmartLife cloud support is now part of upstream
-main itself, independently confirmed via the GitHub API and a direct content
-check of `midealan/cloud.py` on `main`.
+**Update 2026-10-15 (live validation complete)**: upstream cloud-support PR
+https://github.com/wuwentao/midea-lan/pull/198 **merged** into
+`wuwentao/midea-lan:main` (merge commit `6748eb6266eb756e038faf5d9024428aa94820ab`).
+The Lua/plugin test-coverage PR, https://github.com/wuwentao/midea-lan/pull/215,
+has now been **live-validated against the real TSmartLife cloud and the real
+device** (not just mocked) and marked **ready for review**.
 
-The Lua/plugin test-coverage branch has been rebased directly onto real
-upstream `main` and opened as a proper cross-repo PR:
-**https://github.com/wuwentao/midea-lan/pull/215** (open, **draft** —
-deliberately not marked ready for review yet). The earlier fork-only stacked
-PR (https://github.com/jaspweowaale/midea-lan/pull/1), which existed only
-because #198 hadn't merged yet, has been closed with a comment pointing to
-#215.
+**Live results, real account + real device (Toshiba `GR-RF900WI-PMV(06)-MG`,
+type `0xCA`, model `310A079W`), read-only (`MessageQuery` only, no control
+commands sent):**
 
-- `TSmartLifeCloud.download_lua`/`download_plugin` correctly inherit
-  `SmartHomeCloud`'s implementation (verified structurally and via mocked
-  end-to-end tests — **still not yet exercised against the real cloud** with
-  this device's real serial number; that live test remains a separate,
-  explicitly-gated step, not yet executed).
-- Full suite: 2865/2865 passing against current upstream `main`, ruff clean,
-  no new mypy issues.
-- PR #215 is intentionally left in draft state until the live validation
-  actually happens — it will be updated with real results and marked ready
-  for review at that point, not before.
+- **`download_plugin()` -- PASS.** Returned a real file: a well-formed zip
+  archive, top-level folder `T0xCA_310A079W/...` matching the exact device
+  model, confirmed via `unzip -l` and SHA256 (hash recorded locally, file
+  itself never published -- see "Where findings/evidence are stored" below;
+  it is Toshiba/Midea's own proprietary plugin bundle).
+- **`download_lua()` -- real, reproducible server-side rejection, root-caused,
+  NOT a TSmartLife-specific defect.** The server returns
+  `{"code":1101,"msg":"Invalid param wrong format: sn length < 17","data":null}`.
+  Confirmed (not assumed) that the `sn` this library already decrypts
+  correctly is 32 characters -- well above the length check -- so the failure
+  is not in TSmartLife's own code path. The actual bug: `SmartHomeCloud.download_lua()`
+  in `midealan/cloud.py` sends the key `"encryptedType "` (trailing space) in
+  its request payload, introduced in upstream commit `30de473`
+  ("feat(cloud): add plugin download for meiju and smarthome #336"), well
+  before any TSmartLife work. This is a **pre-existing, cross-vendor bug** --
+  `SmartHomeCloud` is also used directly by the unrelated, pre-existing
+  `"SmartHome"` cloud entry in the same file -- not something introduced by or
+  scoped to PR #215, so it was reported in the PR rather than silently
+  patched as part of it.
+- Fresh independent LAN V3 connection with a newly cloud-retrieved
+  credential (distinct from the known-working backup) also succeeded
+  end-to-end on the real device during this same session.
+- Test results: 28/28 TSmartLife-scoped tests, 2865/2865 full suite, ruff
+  clean, mypy clean (94 source files).
+
+**Where findings/evidence are stored (not published, local-only, Bob's Mac,
+`700`/`600` permissions)**: the downloaded plugin zip and its SHA256 live
+under `~/stage4m_restricted/lua_plugin_downloads/`; the freshly-retrieved LAN
+credential (kept separate from the untouched known-working backup) lives
+under `~/stage4m_restricted/lan_credentials_retrieved_<timestamp>.json`; the
+live-test and diagnostic scripts live under `~/stage4m_restricted/` alongside
+the restricted account-credential file they read from at runtime. None of
+these contain this project's publishable material -- the plugin bundle is
+Toshiba/Midea's own proprietary content and the LAN credential is
+per-appliance, never shared, never published.
+
+**Net outcome**: PR #215's actual content (verifying `TSmartLifeCloud`
+inherits `download_lua`/`download_plugin` from `SmartHomeCloud` unmodified)
+is now live-confirmed correct -- the plugin half fully works end-to-end
+against the real cloud/device, and the Lua half's live failure has a known,
+external, pre-existing root cause rather than a defect in this contribution.
+PR #215 description and a summary comment were updated with these results
+and it has been marked **ready for review**. This project's responsibility
+ends there; merging is the upstream maintainer's call.
 
 ## 7. App functions with protocol support but not yet in Home Assistant
 
