@@ -274,3 +274,15 @@ attribution: [`NOTICE.md`](NOTICE.md). License: MIT, see [`LICENSE`](LICENSE).
 - [`docs/DEVELOPER_GUIDE.md`](docs/DEVELOPER_GUIDE.md) — adding another model/market
 - [`docs/KNOWN_LIMITATIONS.md`](docs/KNOWN_LIMITATIONS.md)
 - [`examples/`](examples/) — generic Home Assistant config + dashboard YAML (no personal device IDs)
+
+## Support Independent Development
+
+This project is independently researched and maintained.
+
+If you find the work useful, you can support continued research, testing,
+documentation, hosting, and development through Ko-fi.
+
+**Support:** https://ko-fi.com/jasperwaale
+
+Contributions are voluntary and do not influence technical findings or project
+decisions.
