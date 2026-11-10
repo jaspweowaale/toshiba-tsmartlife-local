@@ -275,14 +275,30 @@ attribution: [`NOTICE.md`](NOTICE.md). License: MIT, see [`LICENSE`](LICENSE).
 - [`docs/KNOWN_LIMITATIONS.md`](docs/KNOWN_LIMITATIONS.md)
 - [`examples/`](examples/) — generic Home Assistant config + dashboard YAML (no personal device IDs)
 
-## Support Independent Development
+## Get Involved
 
-This project is independently researched and maintained.
+This project welcomes contributions of time, technical skills, testing,
+documentation, research, and ideas. It has been verified end-to-end against
+exactly one physical unit, so reports from other models and markets are the
+most useful thing anyone can add.
 
-If you find the work useful, you can support continued research, testing,
-documentation, hosting, and development through Ko-fi.
+The routes in:
 
-**Support:** https://ko-fi.com/jasperwaale
+* **Another model or market** — see
+  [`docs/DEVELOPER_GUIDE.md`](docs/DEVELOPER_GUIDE.md), then open an issue with
+  what worked and what did not.
+* **Issues and pull requests here on GitHub** — read
+  [`CONTRIBUTING.md`](CONTRIBUTING.md) first.
+* **Documentation and review** — corrections to the guides under
+  [`docs/`](docs/USER_GUIDE.md), including
+  [`docs/KNOWN_LIMITATIONS.md`](docs/KNOWN_LIMITATIONS.md).
+* **Other ways to take part**, including non-technical ones: https://holisticdata.com/get-involved
+
+Voluntary financial contributions are also welcome, to help cover ongoing
+project costs — hosting, development, research and maintenance. They are never
+required in order to take part, and everything above matters more.
+
+**Ko-fi:** https://ko-fi.com/jasperwaale
 
 Contributions are voluntary and do not influence technical findings or project
 decisions.
